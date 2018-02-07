@@ -34,6 +34,7 @@
 
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <qwebsocket.h>
 #include "coordinates.hpp"
 #include <memory>
 
@@ -103,6 +104,16 @@ public:
     {
     }
 
+    void sendToSocket(QWebSocket &socket) const
+    {
+        if(!mActions[0])return;
+        socket.sendTextMessage(mActions[0]->toString());
+
+        if(!mActions[1])return;
+        socket.sendTextMessage(mActions[1]->toString());
+
+    }
+
     void addAction(const std::shared_ptr<Action> &nwAction)
     {
         if(mActions[1])return;//already full
@@ -129,6 +140,13 @@ public:
         if(index > 2)throw std::out_of_range("Greater than 2");
 
         return mActions[index];
+    }
+
+    bool hasAttack() const
+    {
+        return mActions[0] && mActions[0]->getType() == Action::ATTACK ||
+                mActions[1] && mActions[1]->getType() == Action::ATTACK;
+
     }
 
 

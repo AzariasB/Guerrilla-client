@@ -105,12 +105,16 @@ void BattleField::applyAction(const Action &action)
     }
 }
 
-
-bool BattleField::isAttackable(const Coordinates &target, const Unit &attacker) const
+bool BattleField::isAttackable(const Coordinates &target, Unit::COLOR originColor) const
 {
     if(!target.isValid())return false;
     auto unit = unitAt(target);
-    return unit && unit->getColor() != attacker.getColor();
+    return unit && unit->getColor() != originColor;
+}
+
+bool BattleField::isAttackable(const Coordinates &target, const Unit &attacker) const
+{
+    return isAttackable(target, attacker.getColor());
 }
 
 bool BattleField::isAccessible(const Coordinates &dest) const

@@ -15,7 +15,7 @@ public:
 
     void generate(std::size_t depth, const BattleField &field);
 
-    Turn getBestAction() const;
+    const Turn &getBestAction() const;
 
 private:
     struct Node;
@@ -31,9 +31,11 @@ private:
 
     const std::unique_ptr<Node> &getWorstNode(const std::unique_ptr<Node> &parent) const;
 
-    int minmax(const std::unique_ptr<Node> &parent) const;
+    float minmax(const std::unique_ptr<Node> &parent, int depth, bool maximizePlayer) const;
 
     std::unique_ptr<Node> mRoot;
+
+    std::size_t mTreeDepth = 0;
 
 };
 

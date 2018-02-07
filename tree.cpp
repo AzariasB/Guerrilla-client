@@ -1,4 +1,6 @@
+
 #include "tree.hpp"
+#include <float.h>
 
 Tree::Tree()
 {
@@ -7,34 +9,47 @@ Tree::Tree()
 
 void Tree::generate(std::size_t depth, const BattleField &field)
 {
+    field.possibleTurns();
 
+        mTreeDepth = depth;
 }
 
-Turn Tree::getBestAction() const
+const Turn &Tree::getBestAction() const
 {
-    //get best element of root
 
-    return Turn();
+    float bestNodeVal = -99999.f;
+    Turn *bestTurn = 0;
+
+    for(const auto &node : mRoot->childs){
+        float mmax = minmax(node, mTreeDepth, true);
+        if(mmax > bestNodeVal){
+            bestNodeVal = mmax;
+            bestTurn = &node->action;
+        }
+    }
+
+    return *bestTurn;
 }
 
-const std::unique_ptr<Tree::Node> &Tree::getBestNode(const std::unique_ptr<Tree::Node> &parent) const
+
+float Tree::minmax(const std::unique_ptr<Node> &parent, int depth, bool maximizePlayer) const
 {
-    if(parent->childs.size() == 0)return parent;
+    if(parent->childs.size() == 0 || depth == 0)return parent->action.getWeight();
 
-    const std::unique_ptr<Tree::Node> &best = *std::max_element(parent->childs.cbegin(), parent->childs.cend(), [](const auto&first, const auto &second){
-        return first->action.getWeight() < second->action.getWeight();
-    });
+    if(maximizePlayer){
+        float bestVal = -9999.f;
+        for(const auto &ptr : parent->childs){
+            float v = minmax(ptr, depth-1, false);
+            bestVal = qMin(bestVal, v);
+        }
+        return bestVal;
+    }
 
-    return getWorstNode(best);
-}
-
-const std::unique_ptr<Tree::Node> &Tree::getWorstNode(const std::unique_ptr<Tree::Node> &parent) const
-{
-    if(parent->childs.size() == 0) return parent;
-
-    const std::unique_ptr<Tree::Node> &worst = *std::min_element(parent->childs.cbegin(), parent->childs.cend(), [](const auto&first, const auto&second){
-        return first->action.getWeight() < second->action.getWeight();
-    });
-
-    return getBestNode(worst);
+    //minimize then
+    float bestVal = FLT_MAX;
+    for(const auto &ptr : parent->childs){
+        float v = minmax(ptr, depth-1, true);
+        bestVal = qMin(v, bestVal);
+    }
+    return bestVal;
 }

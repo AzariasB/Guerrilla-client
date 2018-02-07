@@ -75,6 +75,8 @@ public:
 
     bool isAttackable(const Coordinates &target, const Unit & attacker) const;
 
+    bool isAttackable(const Coordinates &target, Unit::COLOR originColor) const;
+
 private:
     std::shared_ptr<Unit> mEmpty = {};
 

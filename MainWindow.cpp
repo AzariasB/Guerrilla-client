@@ -112,9 +112,19 @@ void MainWindow::messageReceived(QString msg)
         std::vector<Turn> mAllTurns = mBattleField.possibleTurns();
 
         if(mAllTurns.size() > 0){
-            Turn &t = *select_randomly(mAllTurns.begin(), mAllTurns.end());
-            mWebSocket.sendTextMessage(t.getAction(0)->toString());
-            if(t.getAction(1)) mWebSocket.sendTextMessage(t.getAction(1)->toString());//send second action if there is any
+            std::vector<Turn> attacks;
+            std::copy_if(mAllTurns.begin(), mAllTurns.end(), std::back_inserter(attacks), [](const Turn& turn){
+                return turn.hasAttack();
+            });
+
+            if(attacks.size() > 0){
+                Turn &t = *select_randomly(attacks.begin(), attacks.end());
+                t.sendToSocket(mWebSocket);
+            }else{
+                Turn &t = *select_randomly(mAllTurns.begin(), mAllTurns.end());
+                t.sendToSocket(mWebSocket);
+            }
+
         }else{
             qWarning() << "Didn't find something to play";
         }

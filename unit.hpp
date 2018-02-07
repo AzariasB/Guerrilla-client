@@ -56,6 +56,8 @@ public:
 
     static std::shared_ptr<Unit> fromJson(const QJsonObject &obj, const Coordinates &position);
 
+    static std::vector<Coordinates> standardMoves();
+
     void setColor(COLOR c){
         mColor = c;
     }
@@ -63,8 +65,7 @@ public:
 
     virtual QString strType() const = 0;
 
-
-    virtual std::vector<Turn> possibleTurns(const BattleField &field) const = 0;
+    std::vector<Turn> possibleTurns(const BattleField &field);
 
     void move(Coordinates nwPosition){
         mPosition = nwPosition;
@@ -72,6 +73,10 @@ public:
 
 
 protected:
+    std::vector<Coordinates> mPossibleMoves = standardMoves();
+
+    std::vector<Coordinates> mPossibleAttacks;
+
     Coordinates mPosition;
     COLOR mColor;
 };
@@ -84,6 +89,12 @@ public:
     MobileTower(COLOR color, const Coordinates &position):
         Unit(color, position)
     {
+        //standard moves
+        //attacks points
+        mPossibleAttacks = {
+            {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0},//all around
+            {2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2},{2,0}//double range
+        };
     }
 
     QString strType() const override
@@ -91,7 +102,6 @@ public:
         return "S";
     }
 
-    std::vector<Turn> possibleTurns(const BattleField &field) const override;
 };
 
 
@@ -103,14 +113,22 @@ public:
     Infantery(COLOR color, const Coordinates& position):
         Unit(color, position)
     {
+        //double moves
+        mPossibleMoves = {
+            {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0},//all around
+            {2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2},{2,0}//double range
+        };
+
+        //attacks
+        const int m = color == WHITE ? -1 : 1;//direction multiplier
+        mPossibleAttacks = {{1,0},{0,1},{m,0}};
+
     }
 
     QString strType() const override
     {
-        return "R";
+        return "L";
     }
-
-    std::vector<Turn> possibleTurns(const BattleField &field) const override;
 
 };
 
@@ -122,15 +140,19 @@ public:
     Gunner(COLOR color, const Coordinates &coordinates):
         Unit(color, coordinates)
     {
+        //standard moves
+        //attacks
+        const int m = color == WHITE ? -1 : 1;//direction multiplier
+        mPossibleAttacks = {
+            {1,0},{2,0},{-1,0},{-2,0},//side
+            {0,m},{0,m*2},{0,m*3}//front
+        };
     }
 
     QString strType() const override
     {
-        return "L";
+        return "R";
     }
-
-
-    std::vector<Turn> possibleTurns(const BattleField &field) const override;
 
 };
 

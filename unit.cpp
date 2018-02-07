@@ -45,6 +45,13 @@ Unit::Unit(COLOR color, const Coordinates &position):
 
 }
 
+std::vector<Coordinates> Unit::standardMoves()
+{
+    return std::vector<Coordinates>{
+        {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0}
+    };
+}
+
 std::shared_ptr<Unit> Unit::fromJson(const QJsonObject &obj, const Coordinates &position)
 {
     int type = obj.value("type").toInt();
@@ -62,98 +69,28 @@ std::shared_ptr<Unit> Unit::fromJson(const QJsonObject &obj, const Coordinates &
     }
 }
 
-std::vector<Turn> Gunner::possibleTurns(const BattleField &field) const
+std::vector<Turn> Unit::possibleTurns(const BattleField &field)
 {
-    std::vector<Turn> res;
-    //check for moves
-    for(int y = -1; y <= 1; ++y){
-        for(int x = -1; x <= 1; ++x){
-            if(y == 0 && x == 0)continue;
-            Coordinates nwPos = mPosition + Coordinates(x,y);
-            if(field.isAccessible(nwPos)){//no one here, possible to go
-                res.emplace_back(std::make_unique<Action>(Action::MOVE, mPosition, nwPos));
+    std::vector<Turn> possibleTurns;
+
+    for(const auto& move : mPossibleMoves){
+        Coordinates nwPos = mPosition + move;
+        if(field.isAccessible(nwPos)){
+            std::shared_ptr<Action> moveAction = std::make_shared<Action>(Action::MOVE, mPosition, nwPos);
+
+            possibleTurns.emplace_back(moveAction);
+
+            for(const auto& attack : mPossibleAttacks){
+                Coordinates attackPos = nwPos + attack;
+                if(field.isAttackable(attackPos,*this))
+                    possibleTurns.emplace_back(moveAction, std::make_shared<Action>(Action::ATTACK, nwPos, attackPos));
             }
+
         }
+
     }
 
-    //check for attacks
-    int multiplier = mColor == WHITE ? 1 : -1;
-    std::array<Coordinates, 7> directions = {
-        {{-2, 0}, {-1, 0}, {1, 0}, {2, 0}, {0, multiplier}, {0, multiplier*2}, {0, multiplier*3} }
-    };
-    for(const Coordinates &c : directions){
-        Coordinates nwPoint = mPosition + c;
-        if(field.isAttackable(nwPoint, *this)){
-            res.emplace_back(std::make_unique<Action>(Action::ATTACK, mPosition, nwPoint));
-        }
-    }
-
-
-    return res;
+    return possibleTurns;
 }
 
-std::vector<Turn> Infantery::possibleTurns(const BattleField &field) const
-{
-    std::vector<Turn> res;
-    //check for moves
-    for(int y = -1; y <= 1; ++y){
-        for(int x = -1; x <= 1; ++x){
-            if(y == 0 && x == 0)continue;
-            Coordinates nwPos = mPosition + Coordinates(x,y);
-            if(field.isAccessible(nwPos)){//no one here, possible to go
-                res.emplace_back(std::make_unique<Action>(Action::MOVE, mPosition, nwPos));
 
-                // two boxes move
-                Coordinates extraPos = nwPos + Coordinates(x,y);
-                if(field.isAccessible(extraPos))
-                    res.emplace_back(std::make_unique<Action>(Action::MOVE, mPosition, nwPos));
-            }
-        }
-    }
-
-
-    //check for attacks
-    Coordinates pos1 = mPosition + Coordinates(-1,0);
-    if(field.isAttackable(pos1,*this)) res.emplace_back(std::make_unique<Action>(Action::ATTACK, mPosition, pos1));
-
-    pos1 = mPosition + Coordinates(1, 0);
-    if(field.isAttackable(pos1, *this)) res.emplace_back(std::make_unique<Action>(Action::ATTACK, mPosition, pos1));
-
-    pos1 = mPosition + Coordinates(0, mColor == WHITE ? 1 : -1);
-    if(field.isAttackable(pos1, *this)) res.emplace_back(std::make_unique<Action>(Action::ATTACK, mPosition, pos1));
-
-    return res;
-}
-
-std::vector<Turn> MobileTower::possibleTurns(const BattleField &field) const
-{
-    std::vector<Turn> res;
-    //check for moves
-    for(int y = -1; y <= 1; ++y){
-        for(int x = -1; x <= 1; ++x){
-            if(y == 0 && x == 0)continue;
-            Coordinates nwPos = mPosition + Coordinates(x,y);
-            if(field.isAccessible(nwPos)){//no one here, possible to go
-                res.emplace_back(std::make_unique<Action>(Action::MOVE, mPosition, nwPos));
-            }
-        }
-    }
-
-    //check for attacks
-    for(int y = -1; y <= 1; ++y){
-        for(int x = -1; x <= 1; ++x){
-            if(y == 0 && x == 0)continue;
-            Coordinates nwPos = mPosition + Coordinates(x,y);
-            if(field.isAttackable(nwPos, *this)){//someone's here, attack !
-                res.emplace_back(std::make_unique<Action>(Action::ATTACK, mPosition, nwPos));
-            }
-
-            // two boxes move
-            Coordinates extraPos = nwPos + Coordinates(x,y);
-            if(field.isAttackable(extraPos, *this))// attack !
-                res.emplace_back(std::make_unique<Action>(Action::ATTACK, mPosition, extraPos));
-        }
-    }
-
-    return res;
-}
