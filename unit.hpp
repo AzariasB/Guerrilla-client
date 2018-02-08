@@ -63,6 +63,8 @@ public:
     }
 
 
+    virtual Unit *clone() const = 0;
+
     virtual QString strType() const = 0;
 
     std::vector<Turn> possibleTurns(const BattleField &field);
@@ -75,10 +77,12 @@ public:
 protected:
     std::vector<Coordinates> mPossibleMoves = standardMoves();
 
-    std::vector<Coordinates> mPossibleAttacks;
 
-    Coordinates mPosition;
     COLOR mColor;
+    Coordinates mPosition;
+
+
+    std::vector<Coordinates> mPossibleAttacks;
 };
 
 class MobileTower : public Unit
@@ -95,6 +99,11 @@ public:
             {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0},//all around
             {2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2},{2,0}//double range
         };
+    }
+
+    Unit *clone() const override
+    {
+        return new MobileTower(mColor, mPosition);
     }
 
     QString strType() const override
@@ -120,10 +129,16 @@ public:
         };
 
         //attacks
-        const int m = color == WHITE ? -1 : 1;//direction multiplier
-        mPossibleAttacks = {{1,0},{0,1},{m,0}};
+        const int m = color == WHITE ? 1 : -1;//direction multiplier
+        mPossibleAttacks = {{1,0},{-1,0},{0,m}};
 
     }
+
+    Unit *clone() const override
+    {
+        return new Infantery(mColor, mPosition);
+    }
+
 
     QString strType() const override
     {
@@ -142,11 +157,16 @@ public:
     {
         //standard moves
         //attacks
-        const int m = color == WHITE ? -1 : 1;//direction multiplier
+        const int m = color == WHITE ? 1 : -1;//direction multiplier
         mPossibleAttacks = {
             {1,0},{2,0},{-1,0},{-2,0},//side
             {0,m},{0,m*2},{0,m*3}//front
         };
+    }
+
+    Unit *clone()  const override
+    {
+        return new Gunner(mColor, mPosition);
     }
 
     QString strType() const override

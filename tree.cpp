@@ -9,14 +9,33 @@ Tree::Tree()
 
 void Tree::generate(std::size_t depth, const BattleField &field)
 {
-    field.possibleTurns();
+    mTreeDepth = depth;//save the depth for minmax
+    mRoot = std::make_unique<Node>();
+    genTreeNode(mRoot, field, depth, 1);
+}
 
-        mTreeDepth = depth;
+void Tree::genTreeNode(std::unique_ptr<Node> &parent, const BattleField &field, std::size_t depth, int multi)
+{
+    if(depth == 0)return;
+
+    std::vector<Turn> turns = field.possibleTurns();
+    for(auto &turn : turns){
+        if(turn.getAction(0))turn.getAction(0)->setWeight(field.actionWeight(*turn.getAction(0))* multi);
+        if(turn.getAction(1))turn.getAction(1)->setWeight(field.actionWeight(*turn.getAction(1))* multi );
+
+        std::unique_ptr<Node> nwNode = std::make_unique<Node>(turn);
+        BattleField copy = field;//copy field to simulate turn
+        turn.applyActions(copy);
+
+        genTreeNode(nwNode, copy, depth-1, -multi);
+        parent->childs.emplace_back(std::move(nwNode));
+    }
+
+
 }
 
 const Turn &Tree::getBestAction() const
 {
-
     float bestNodeVal = -99999.f;
     Turn *bestTurn = 0;
 

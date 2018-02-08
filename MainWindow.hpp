@@ -65,6 +65,8 @@ private:
 
     void attack(const Coordinates &from, const Coordinates &to);
 
+    void play();
+
     QWebSocket mWebSocket;
 
     BattleField mBattleField;

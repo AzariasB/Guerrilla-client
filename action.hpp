@@ -39,6 +39,8 @@
 #include <memory>
 
 
+class BattleField;
+
 class Action
 {
 public:
@@ -104,6 +106,8 @@ public:
     {
     }
 
+    void applyActions(BattleField &field);
+
     void sendToSocket(QWebSocket &socket) const
     {
         if(!mActions[0])return;
@@ -144,8 +148,8 @@ public:
 
     bool hasAttack() const
     {
-        return mActions[0] && mActions[0]->getType() == Action::ATTACK ||
-                mActions[1] && mActions[1]->getType() == Action::ATTACK;
+        return (mActions[0] && mActions[0]->getType() == Action::ATTACK) ||
+                (mActions[1] && mActions[1]->getType() == Action::ATTACK);
 
     }
 

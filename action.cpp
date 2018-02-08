@@ -29,7 +29,7 @@
  * Created on 30/1/2018
  */
 #include "action.hpp"
-
+#include "battlefield.hpp"
 
 Action::Action():
     mType(UNKNOWN),
@@ -61,3 +61,10 @@ QJsonObject Action::toJson() const
     return res;
 }
 
+
+
+void Turn::applyActions(BattleField &field)
+{
+    if(mActions[0])field.applyAction(*mActions[0]);
+    if(mActions[1])field.applyAction(*mActions[1]);
+}

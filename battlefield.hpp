@@ -48,6 +48,10 @@ class BattleField
 public:
     BattleField();
 
+    BattleField(const BattleField &other);
+
+    float actionWeight(const Action &action) const;
+
     void fillField(const QJsonArray &units);
 
     void clearField();
@@ -76,6 +80,11 @@ public:
     bool isAttackable(const Coordinates &target, const Unit & attacker) const;
 
     bool isAttackable(const Coordinates &target, Unit::COLOR originColor) const;
+
+    int getId() const
+    {
+        return myId;
+    }
 
 private:
     std::shared_ptr<Unit> mEmpty = {};

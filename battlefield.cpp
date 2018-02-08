@@ -37,6 +37,23 @@ BattleField::BattleField()
 
 }
 
+BattleField::BattleField(const BattleField &other):
+    myId(other.getId())
+{
+    for(int y = 0; y < 25; ++y){
+        for(int x = 0; x < 25; ++x){
+            if(other.getField()[y][x]){
+                std::shared_ptr<Unit> unitCopy = std::shared_ptr<Unit>(other.getField()[y][x]->clone());
+                mField[y][x] = unitCopy;
+                mAllUnits << unitCopy;
+                if(unitCopy->getColor() == myId){
+                    mMyUnits << unitCopy;
+                }
+            }
+        }
+    }
+}
+
 void BattleField::fillField(const QJsonArray &units)
 {
     for(QJsonValue val : units){
@@ -86,6 +103,23 @@ const std::shared_ptr<Unit>& BattleField::unitAt(const Coordinates &coords) cons
 }
 
 
+float BattleField::actionWeight(const Action &action) const
+{
+    if(action.getType() == Action::ATTACK){
+        //depending on the type of unit, different points
+        auto &target = unitAt(action.getTo());
+        if(target->strType() == "S")return 10.f;
+        if(target->strType() == "R")return 5.f;
+        if(target->strType() == "L") return 2.f;
+    }else{
+        //depending on the position on the board
+        int rand1 = qrand();
+        int rand2 = qrand()*(rand1*2);
+        return 0;
+        //return rand1/(float)rand2;
+    }
+}
+
 std::vector<Turn> BattleField::possibleTurns() const
 {
     std::vector<Turn> vec;
@@ -108,7 +142,7 @@ void BattleField::applyAction(const Action &action)
 bool BattleField::isAttackable(const Coordinates &target, Unit::COLOR originColor) const
 {
     if(!target.isValid())return false;
-    auto unit = unitAt(target);
+    auto &unit = unitAt(target);
     return unit && unit->getColor() != originColor;
 }
 

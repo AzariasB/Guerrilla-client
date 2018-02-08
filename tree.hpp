@@ -18,14 +18,18 @@ public:
     const Turn &getBestAction() const;
 
 private:
-    struct Node;
-
-    using child_nodes = std::vector<std::unique_ptr<Node>>;
 
     struct Node{
+
+        Node(){}
+
+        Node(const Turn &t):action(t){}
+
         Turn action;
-        child_nodes childs;
+        std::vector<std::unique_ptr<Node>> childs;
     };
+
+    void genTreeNode(std::unique_ptr<Node> &parent, const BattleField &field, std::size_t depth, int multi);
 
     const std::unique_ptr<Node> &getBestNode(const std::unique_ptr<Node> &parent) const;
 

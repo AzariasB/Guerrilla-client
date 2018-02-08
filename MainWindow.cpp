@@ -34,9 +34,9 @@
 #include "MainWindow.hpp"
 #include "ui_MainWindow.h"
 #include <QPushButton>
-#include <QThread>
 #include <QMessageBox>
 
+#include "tree.hpp"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&mWebSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(error(QAbstractSocket::SocketError)));
     connect(&mWebSocket, &QWebSocket::connected, this, &MainWindow::connected);
 
-    mWebSocket.open(QUrl("wss://guerrilla.herokuapp.com"));
+    mWebSocket.open(QUrl("ws://localhost:5000"));
 }
 
 MainWindow::~MainWindow()
@@ -75,7 +75,7 @@ void MainWindow::connected()
 
 void MainWindow::messageReceived(QString msg)
 {
-    qDebug() << msg;
+   // qDebug() << msg;
 
 
     QJsonDocument doc = QJsonDocument::fromJson(msg.toUtf8());
@@ -107,33 +107,7 @@ void MainWindow::messageReceived(QString msg)
         qDebug() << "Setting mPrevMsgId\n";
         mBattleField.setId(mId);
     }else if(str == "your_turn"){
-
-        //TESTING HERE
-        std::vector<Turn> mAllTurns = mBattleField.possibleTurns();
-
-        if(mAllTurns.size() > 0){
-            std::vector<Turn> attacks;
-            std::copy_if(mAllTurns.begin(), mAllTurns.end(), std::back_inserter(attacks), [](const Turn& turn){
-                return turn.hasAttack();
-            });
-
-            if(attacks.size() > 0){
-                Turn &t = *select_randomly(attacks.begin(), attacks.end());
-                t.sendToSocket(mWebSocket);
-            }else{
-                Turn &t = *select_randomly(mAllTurns.begin(), mAllTurns.end());
-                t.sendToSocket(mWebSocket);
-            }
-
-        }else{
-            qWarning() << "Didn't find something to play";
-        }
-
-
-        mWebSocket.sendTextMessage("{\"type\":\"end_turn\"}");
-
-        //END TESTING
-
+        play();
     }else if(str == "move"){
         //apply move
         QJsonObject data = doc.object()["data"].toObject();
@@ -169,6 +143,17 @@ void MainWindow::move(const Coordinates &from, const Coordinates &to)
     if(mBattleField.unitAt(to)->getColor() == mId){
         mButtons[to.y][to.x]->setStyleSheet("QPushButton{color:blue;}");
     }
+}
+
+void MainWindow::play()
+{
+    Tree decisionTree;
+
+    decisionTree.generate(1, mBattleField);
+
+    decisionTree.getBestAction().sendToSocket(mWebSocket);
+
+    mWebSocket.sendTextMessage("{\"type\":\"end_turn\"}");
 }
 
 void MainWindow::attack(const Coordinates &from, const Coordinates &to)
