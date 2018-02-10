@@ -39,10 +39,12 @@
 #include <array>
 #include <QPushButton>
 
-namespace Ui {
-class MainWindow;
-}
-
+/**
+ * @brief The MainWindow class
+ * MainWindow is the class used to represent
+ * the main window of the application
+ * it also handles the websocket communications with the server
+ */
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -52,31 +54,98 @@ public:
     ~MainWindow();
 
 public slots:
+    /**
+     * @brief connected whenever
+     * the socket is connected
+     */
     void connected();
 
+    /**
+     * @brief messageReceived
+     * whenever a message is received by the socket
+     * @param msg
+     */
     void messageReceived(QString msg);
 
+    /**
+     * @brief error
+     * whenever an error happened with the socket
+     * @param err
+     */
     void error(QAbstractSocket::SocketError err);
 
 private:
+    /**
+     * @brief updateBoard
+     * updates the board, using the given json array
+     * that is : updating the battlefield, and updating the buttons
+     * @param arr
+     */
     void updateBoard(QJsonArray arr);
 
+    /**
+     * @brief move whenever a move action is sent by the socket
+     * performs the move, on the field, then update
+     * the buttons
+     * @param from
+     * @param to
+     */
     void move(const Coordinates &from, const Coordinates &to);
 
+    /**
+     * @brief attack whenever an attack action is sent by the socket
+     * performs the attacke, on the field then update the buttons
+     * @param from
+     * @param to
+     */
     void attack(const Coordinates &from, const Coordinates &to);
 
+    /**
+     * @brief play
+     * when it's the player's turn to make a move
+     * will calculate the best move and send it to the
+     * server via websocket
+     */
     void play();
 
+    /**
+     * @brief mWebSocket
+     * the websocket used to communicate
+     * with the server
+     */
     QWebSocket mWebSocket;
 
+    /**
+     * @brief mBattleField the
+     * battlefield
+     */
     BattleField mBattleField;
 
+    /**
+     * @brief mLayout layout
+     */
     QGridLayout *mLayout;
 
+    /**
+     * @brief mButtons a pointer to all the buttons
+     * to display the battle field. Used to update them
+     * whenever it's necessary.
+     * When clicking on a button, the coordinate of it
+     * will be printed out
+     * all the pointers are automatically destroyed by Qt
+     * so no need to handle their destruction
+     */
     std::array<std::array<QPushButton*, 25>, 25> mButtons;
 
+    /**
+     * @brief mId id of the player
+     */
     int mId;
 
+    /**
+     * @brief mPrevMsgId id of the previous message
+     * to be sure the message arrive in order
+     */
     int mPrevMsgId = -1;
 };
 

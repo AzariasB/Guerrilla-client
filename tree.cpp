@@ -14,20 +14,20 @@ void Tree::generate(std::size_t depth, const BattleField &field)
     genTreeNode(mRoot, field, depth, 1);
 }
 
-void Tree::genTreeNode(std::unique_ptr<Node> &parent, const BattleField &field, std::size_t depth, int multi)
+void Tree::genTreeNode(std::unique_ptr<Node> &parent, const BattleField &field, std::size_t depth, int coef)
 {
     if(depth == 0)return;
 
     std::vector<Turn> turns = field.possibleTurns();
     for(auto &turn : turns){
-        if(turn.getAction(0))turn.getAction(0)->setWeight(field.actionWeight(*turn.getAction(0))* multi);
-        if(turn.getAction(1))turn.getAction(1)->setWeight(field.actionWeight(*turn.getAction(1))* multi );
+        if(turn.getAction(0))turn.getAction(0)->setWeight(field.actionWeight(*turn.getAction(0))* coef);
+        if(turn.getAction(1))turn.getAction(1)->setWeight(field.actionWeight(*turn.getAction(1))* coef );
 
         std::unique_ptr<Node> nwNode = std::make_unique<Node>(turn);
         BattleField copy = field;//copy field to simulate turn
         turn.applyActions(copy);
 
-        genTreeNode(nwNode, copy, depth-1, -multi);
+        genTreeNode(nwNode, copy, depth-1, -coef);
         parent->childs.emplace_back(std::move(nwNode));
     }
 
@@ -36,7 +36,7 @@ void Tree::genTreeNode(std::unique_ptr<Node> &parent, const BattleField &field, 
 
 const Turn &Tree::getBestAction() const
 {
-    float bestNodeVal = -99999.f;
+    float bestNodeVal = -INFINITY;
     Turn *bestTurn = 0;
 
     for(const auto &node : mRoot->childs){
@@ -46,7 +46,6 @@ const Turn &Tree::getBestAction() const
             bestTurn = &node->action;
         }
     }
-
     return *bestTurn;
 }
 
@@ -56,10 +55,10 @@ float Tree::minmax(const std::unique_ptr<Node> &parent, int depth, bool maximize
     if(parent->childs.size() == 0 || depth == 0)return parent->action.getWeight();
 
     if(maximizePlayer){
-        float bestVal = -9999.f;
+        float bestVal = -9999999.f;
         for(const auto &ptr : parent->childs){
             float v = minmax(ptr, depth-1, false);
-            bestVal = qMin(bestVal, v);
+            bestVal = qMax(bestVal, v);
         }
         return bestVal;
     }

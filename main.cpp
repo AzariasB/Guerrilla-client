@@ -31,6 +31,12 @@
 #include "MainWindow.hpp"
 #include <QApplication>
 
+/**
+ * @brief main sample main for qt
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

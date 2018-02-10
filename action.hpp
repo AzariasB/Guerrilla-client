@@ -41,54 +41,134 @@
 
 class BattleField;
 
+/**
+ * @brief The Action class
+ * This class represent a single action
+ * (attack or move) to be done during a turn
+ * An action has a weight that is evaludated by the battlefield
+ * in order to determine the best move
+ * with the minmax algorithm
+ */
 class Action
 {
 public:
+    /**
+     * @brief The ACTION_TYPE enum
+     * the type of action
+     * (unknown is used for the empty constructor)
+     */
     enum ACTION_TYPE{ATTACK, MOVE, UNKNOWN};
 
     Action();//empty action for the minmax
 
+    /**
+     * @brief Action Constructor
+     * @param type the type of action
+     * @param from the origin coordinates
+     * @param to the destination coordintaes
+     */
     Action(ACTION_TYPE type, Coordinates from, Coordinates to);
 
+    /**
+     * @brief toJson serializes the action used
+     * for the websockets
+     * @return the serialized object
+     */
     QJsonObject toJson() const;
 
+    /**
+     * @brief operator QString string tranformation
+     * of the object
+     */
     operator QString() const{
         return QString(QJsonDocument(toJson()).toJson(QJsonDocument::Compact));
     }
 
+    /**
+     * @brief toString method to get the json as a string
+     * @return
+     */
     QString toString() const
     {
         return this->operator QString();
     }
 
+    /**
+     * @brief getter for the type
+     * @return
+     */
     ACTION_TYPE getType() const{
         return mType;
     }
 
+    /**
+     * @brief getFrom getter for the origin
+     * @return
+     */
     const Coordinates &getFrom() const{
         return mFrom;
     }
 
+    /**
+     * @brief getTo getter for the destination
+     * @return
+     */
     const Coordinates &getTo() const{
         return mTo;
     }
 
+    /**
+     * @brief getWeight getter for the weight
+     * @return
+     */
     float getWeight() const {
         return mWeight;
     }
 
+    /**
+     * @brief setWeight setter for the weight
+     * @param weight
+     */
     void setWeight(float weight){
         mWeight = weight;
     }
 
 private:
+    /**
+     * @brief mType the type of this action
+     */
     ACTION_TYPE mType;
+
+    /**
+     * @brief mFrom the origin coordinates of the
+     * action
+     */
     Coordinates mFrom;
+
+    /**
+     * @brief mTo the destination of the action
+     * (point to attack for an attack action,
+     *  point where to move for a move action)
+     */
     Coordinates mTo;
+
+    /**
+     * @brief mWeight the weight of the
+     * action
+     */
     float mWeight;
 };
 
 
+/**
+ * @brief The Turn class
+ * the turn class contains two actions,
+ * because each turn, two actions can be
+ * executed. A turn has a weight,
+ * which is the sum of the two actions it contains
+ * It may contain only one action because it may not
+ * be possible to attack & move at the same turn
+ */
 class Turn{
 
 public:
@@ -96,65 +176,69 @@ public:
     {
     }
 
+    /**
+     * @brief Turn constructor, with only one action
+     * @param firstAction the first and only action of this turn
+     */
     Turn(const std::shared_ptr<Action> &firstAction):
         mActions({firstAction})
     {
     }
 
+    /**
+     * @brief Turn constructor, with two actions
+     * @param firstAction
+     * @param secondAction
+     */
     Turn(const std::shared_ptr<Action> &firstAction,const std::shared_ptr<Action> &secondAction):
         mActions({firstAction, secondAction})
     {
     }
 
+    /**
+     * @brief applyActions execute all the actions on the given field
+     * @param field
+     */
     void applyActions(BattleField &field);
 
-    void sendToSocket(QWebSocket &socket) const
-    {
-        if(!mActions[0])return;
-        socket.sendTextMessage(mActions[0]->toString());
+    /**
+     * @brief sendToSocket send the actions to the given websocket
+     * @param socket
+     */
+    void sendToSocket(QWebSocket &socket) const;
 
-        if(!mActions[1])return;
-        socket.sendTextMessage(mActions[1]->toString());
+    /**
+     * @brief addAction add an action to this turn,
+     * if the turn is already full, does nothing
+     * otherwise, add at the correct order
+     * @param nwAction
+     */
+    void addAction(const std::shared_ptr<Action> &nwAction);
 
-    }
+    /**
+     * @brief getWeight the sum of the action's weight
+     * @return
+     */
+    float getWeight() const;
 
-    void addAction(const std::shared_ptr<Action> &nwAction)
-    {
-        if(mActions[1])return;//already full
+    /**
+     * @brief getAction get action at the given index (0 or 1)
+     * @param index
+     * @return
+     */
+    const std::shared_ptr<Action> &getAction(quint8 index);
 
-        if(mActions[0]){
-            mActions[1] = nwAction;
-        }else{
-            mActions[0] = nwAction;
-        }
-    }
-
-    float getWeight() const
-    {
-        float tot = 0;
-
-        if(mActions[0]) tot += mActions[0]->getWeight();
-        if(mActions[1]) tot += mActions[1]->getWeight();
-
-        return tot;
-    }
-
-    const std::shared_ptr<Action> &getAction(quint8 index)
-    {
-        if(index > 2)throw std::out_of_range("Greater than 2");
-
-        return mActions[index];
-    }
-
-    bool hasAttack() const
-    {
-        return (mActions[0] && mActions[0]->getType() == Action::ATTACK) ||
-                (mActions[1] && mActions[1]->getType() == Action::ATTACK);
-
-    }
+    /**
+     * @brief hasAttack wether this turn contains an attack action
+     * @return
+     */
+    bool hasAttack() const;
 
 
 private:
+    /**
+     * @brief mActions a pionter to both of the actions
+     */
     std::array<std::shared_ptr<Action>, 2> mActions;
 };
 

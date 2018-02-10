@@ -35,6 +35,7 @@
 #include "ui_MainWindow.h"
 #include <QPushButton>
 #include <QMessageBox>
+#include "math.h"
 
 #include "tree.hpp"
 
@@ -149,7 +150,11 @@ void MainWindow::play()
 {
     Tree decisionTree;
 
-    decisionTree.generate(1, mBattleField);
+    std::size_t treeDepth = 2/log10(mBattleField.numberOfUnits());
+
+    qDebug() << treeDepth;
+
+    decisionTree.generate(treeDepth, mBattleField);
 
     decisionTree.getBestAction().sendToSocket(mWebSocket);
 
@@ -167,13 +172,16 @@ void MainWindow::attack(const Coordinates &from, const Coordinates &to)
 void MainWindow::updateBoard(QJsonArray arr)
 {
     mBattleField.fillField(arr);
+
     qDebug().noquote().nospace() << mBattleField;
+
+
     for(int y = 0; y < 25; ++y){
         for(int x = 0; x < 25; ++x){
             QPushButton *button = new QPushButton("-");
 
             connect(button, &QPushButton::clicked, [=](){
-                qDebug() << "(x:"<<x<<", y "<<y<<")\n";
+                qDebug() << "(x:"<<x<<", y "<<y<<")\n";//print the coordinates of a button when clicked
             });
 
             mButtons[y][x] = button;

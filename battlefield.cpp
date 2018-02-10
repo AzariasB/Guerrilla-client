@@ -108,15 +108,16 @@ float BattleField::actionWeight(const Action &action) const
     if(action.getType() == Action::ATTACK){
         //depending on the type of unit, different points
         auto &target = unitAt(action.getTo());
-        if(target->strType() == "S")return 10.f;
-        if(target->strType() == "R")return 5.f;
-        if(target->strType() == "L") return 2.f;
+        if(target->strType() == "S")return 200.f;
+        if(target->strType() == "R")return 10.f;
+        if(target->strType() == "L") return 50.f;
     }else{
         //depending on the position on the board
-        int rand1 = qrand();
-        int rand2 = qrand()*(rand1*2);
-        return 0;
-        //return rand1/(float)rand2;
+        auto &moving = unitAt(action.getFrom());
+
+        if(moving->getColor() == Unit::WHITE)return action.getTo().y;
+        //return 25-action.getTo().y;
+        return qrand();
     }
 }
 

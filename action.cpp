@@ -68,3 +68,49 @@ void Turn::applyActions(BattleField &field)
     if(mActions[0])field.applyAction(*mActions[0]);
     if(mActions[1])field.applyAction(*mActions[1]);
 }
+
+void Turn::sendToSocket(QWebSocket &socket) const
+{
+    if(!mActions[0])return;
+    socket.sendTextMessage(mActions[0]->toString());
+
+    if(!mActions[1])return;
+    socket.sendTextMessage(mActions[1]->toString());
+
+}
+
+void Turn::addAction(const std::shared_ptr<Action> &nwAction)
+{
+    if(mActions[1])return;//already full
+
+    if(mActions[0]){
+        mActions[1] = nwAction;
+    }else{
+        mActions[0] = nwAction;
+    }
+}
+
+
+float Turn::getWeight() const
+{
+    float tot = 0;
+
+    if(mActions[0]) tot += mActions[0]->getWeight();
+    if(mActions[1]) tot += mActions[1]->getWeight();
+
+    return tot;
+}
+
+const std::shared_ptr<Action> &Turn::getAction(quint8 index)
+{
+    if(index > 2)throw std::out_of_range("Greater than 2");
+
+    return mActions[index];
+}
+
+bool Turn::hasAttack() const
+{
+    return (mActions[0] && mActions[0]->getType() == Action::ATTACK) ||
+            (mActions[1] && mActions[1]->getType() == Action::ATTACK);
+
+}

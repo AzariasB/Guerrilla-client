@@ -31,11 +31,48 @@
 #include "unit.hpp"
 #include "battlefield.hpp"
 
+//standart
+const std::vector<Coordinates> Unit::mPossibleStandardMoves = {{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0}};
+
+// Mobile tower
+const std::vector<Coordinates> MobileTower::mPossibleAttacks =  {
+    {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0},//all around
+    {2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2},{2,0}//double range
+};
+
+//Infantery
+const std::vector<Coordinates> Infantery::mPossibleBlackAttacks = {{1,0},{-1,0},{0,-1}};
+
+const std::vector<Coordinates> Infantery::mPossibleWhiteAttacks = {{1,0},{-1,0},{0,1}};
+
+const std::vector<Coordinates> Infantery::mPossibleMoves = {
+    {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0},//all around
+    {2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2},{2,0}//double range
+};
+
+//Gunner
+const std::vector<Coordinates> Gunner::mPossibleBlackAttacks = {
+    {1,0},{2,0},{-1,0},{-2,0},//side
+    {0,-1},{0,-2},{0,-3}//front
+};
+
+const std::vector<Coordinates> Gunner::mPossibleWhiteAttacks = {
+    {1,0},{2,0},{-1,0},{-2,0},//side
+    {0,1},{0,2},{0,3}//front
+};
+
+
+
 Unit::Unit():
     mColor(WHITE),
     mPosition(-1,-1)
 {
 
+}
+
+const std::vector<Coordinates> &Unit::possibleMoves() const
+{
+    return mPossibleStandardMoves;
 }
 
 Unit::Unit(COLOR color, const Coordinates &position):
@@ -45,12 +82,6 @@ Unit::Unit(COLOR color, const Coordinates &position):
 
 }
 
-std::vector<Coordinates> Unit::standardMoves()
-{
-    return std::vector<Coordinates>{
-        {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0}
-    };
-}
 
 std::shared_ptr<Unit> Unit::fromJson(const QJsonObject &obj, const Coordinates &position)
 {
@@ -73,14 +104,14 @@ std::vector<Turn> Unit::possibleTurns(const BattleField &field)
 {
     std::vector<Turn> possibleTurns;
 
-    for(const auto& move : mPossibleMoves){
+    for(const auto& move : possibleMoves()){
         Coordinates nwPos = mPosition + move;
         if(field.isAccessible(nwPos)){
             std::shared_ptr<Action> moveAction = std::make_shared<Action>(Action::MOVE, mPosition, nwPos);
 
             possibleTurns.emplace_back(moveAction);
 
-            for(const auto& attack : mPossibleAttacks){
+            for(const auto& attack : possibleAttacks()){
                 Coordinates attackPos = nwPos + attack;
                 if(field.isAttackable(attackPos,*this))
                     possibleTurns.emplace_back(moveAction, std::make_shared<Action>(Action::ATTACK, nwPos, attackPos));

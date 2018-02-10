@@ -36,23 +36,24 @@
 #include  <random>
 #include  <iterator>
 
-template<typename Iter, typename RandomGenerator>
-Iter select_randomly(Iter start, Iter end, RandomGenerator& g) {
-    std::uniform_int_distribution<> dis(0, std::distance(start, end) - 1);
-    std::advance(start, dis(g));
-    return start;
-}
-
-template<typename Iter>
-Iter select_randomly(Iter start, Iter end) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    return select_randomly(start, end, gen);
-}
-
+/**
+ * @brief The Coordinates struct
+ * very usefull class used to point out
+ * a field of the battlefield
+ * the Coordinate struct has a public
+ * int x and y.
+ * It has an overloaded "+" operator
+ * can be tranformed into a jsonobject
+ * can check for its own validity relatively to
+ * the battlefield
+ */
 struct Coordinates{
     int x,y;
 
+    /**
+     * @brief Coordinates default constructor
+     * (init all the valus at 0)
+     */
     Coordinates():
         x(0),
         y(0)
@@ -60,6 +61,12 @@ struct Coordinates{
 
     }
 
+    /**
+     * @brief Coordinates constructs the coordinates
+     * object using the given x and y
+     * @param x_
+     * @param y_
+     */
     Coordinates(int x_, int y_):
         x(x_),
         y(y_)
@@ -67,10 +74,19 @@ struct Coordinates{
 
     }
 
+    /**
+     * @brief isValid
+     * @return wether this coordinates is valid
+     * relative to the battlefield
+     */
     bool isValid() const{
         return x >= 0 && y >= 0 && x < 25 && y < 25;
     }
 
+    /**
+     * @brief Coordinates copy constructor
+     * @param other
+     */
     Coordinates(const Coordinates &other):
         x(other.x),
         y(other.y)
@@ -78,11 +94,21 @@ struct Coordinates{
 
     }
 
+    /**
+     * @brief operator + "add" overload, to easily add two coordinates together
+     * @param other
+     * @return
+     */
     Coordinates operator+(const Coordinates &other) const
     {
         return Coordinates(x + other.x, y + other.y);
     }
 
+    /**
+     * @brief Coordinates creates a coordinate
+     * from the given jsonobject
+     * @param obj
+     */
     Coordinates(const QJsonObject &obj):
         x(obj["x"].toInt()),
         y(obj["y"].toInt())
@@ -90,6 +116,11 @@ struct Coordinates{
 
     }
 
+    /**
+     * @brief toJsonObjet
+     * @return the coordinate representation of this
+     * coordinate
+     */
     QJsonObject toJsonObjet() const{
         QJsonObject res;
         res["x"] = x;

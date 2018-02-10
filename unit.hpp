@@ -41,79 +41,169 @@
 class BattleField;
 
 
+/**
+ * @brief The Unit class
+ * the unit is
+ */
 class Unit
 {
 public:
+    /**
+     * @brief The COLOR enum color of the unit
+     */
     enum COLOR {WHITE, BLACK};
 
+    /**
+     * @brief Unit
+     * empty constructor
+     */
     Unit();
 
+    /**
+     * @brief Unit used to construct a unit
+     * with the given color and the given position
+     * @param color
+     * @param position
+     */
     Unit(COLOR color, const Coordinates &position);
 
+    /**
+     * @brief getColor getter for the unit's color
+     * @return
+     */
     COLOR getColor() const{
         return mColor;
     }
 
+    /**
+     * @brief fromJson static function to get an instance
+     * of a unit, from the given json object, positioned at
+     * the given coordiantes
+     * @param obj
+     * @param position
+     * @return
+     */
     static std::shared_ptr<Unit> fromJson(const QJsonObject &obj, const Coordinates &position);
-
-    static std::vector<Coordinates> standardMoves();
 
     void setColor(COLOR c){
         mColor = c;
     }
 
-
+    /**
+     * @brief clone virtual function that must
+     * be overriden by the subclass in order
+     * to be able to clone them
+     * @return
+     */
     virtual Unit *clone() const = 0;
 
+    /**
+     * @brief strType string representation
+     * of the unit
+     * @return
+     */
     virtual QString strType() const = 0;
 
+    /**
+     * @brief possibleTurns
+     * all the possible turns available for this
+     * battlefield's own unit
+     * @param field
+     * @return
+     */
     std::vector<Turn> possibleTurns(const BattleField &field);
 
-    void move(Coordinates nwPosition){
+    /**
+     * @brief moves the unit at
+     * the given position
+     * @param nwPosition
+     */
+    void move(const Coordinates &nwPosition){
         mPosition = nwPosition;
     }
 
 
 protected:
-    std::vector<Coordinates> mPossibleMoves = standardMoves();
 
+    virtual const std::vector<Coordinates> &possibleMoves() const;
 
+    virtual const std::vector<Coordinates> &possibleAttacks() const = 0;
+
+    /**
+     * @brief possibleMoves
+     * the possible coordinates
+     * from where the unit can move
+     * the vector is initialized by default
+     * but can be changed
+     */
+    static const std::vector<Coordinates> mPossibleStandardMoves;
+
+    /**
+     * @brief mColor color of the unit
+     */
     COLOR mColor;
+
+    /**
+     * @brief mPosition position of the unit
+     */
     Coordinates mPosition;
-
-
-    std::vector<Coordinates> mPossibleAttacks;
 };
 
+/**
+ * @brief The MobileTower class
+ * a quit powerfull unit that moves "slowly"
+ * but can attack at a very long range
+ */
 class MobileTower : public Unit
 {
 public:
     MobileTower(){}
 
+    /**
+     * @brief MobileTower full constructor
+     * @param color
+     * @param position
+     */
     MobileTower(COLOR color, const Coordinates &position):
         Unit(color, position)
     {
-        //standard moves
-        //attacks points
-        mPossibleAttacks = {
-            {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0},//all around
-            {2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2},{2,0}//double range
-        };
     }
 
+    const std::vector<Coordinates> &possibleAttacks() const override
+    {
+        return mPossibleAttacks;
+    }
+
+    /**
+     * @brief clone overriden function
+     * @return
+     */
     Unit *clone() const override
     {
         return new MobileTower(mColor, mPosition);
     }
 
+    /**
+     * @brief strType
+     * @return
+     */
     QString strType() const override
     {
         return "S";
     }
 
+private:
+    static const std::vector<Coordinates> mPossibleAttacks;
 };
 
 
+/**
+ * @brief The Infantery class
+ * the infantery is a unit
+ * quite vulnerable, but that
+ * can move pretty fast compared
+ * to the other units
+ */
 class Infantery : public Unit
 {
 public:
@@ -122,15 +212,6 @@ public:
     Infantery(COLOR color, const Coordinates& position):
         Unit(color, position)
     {
-        //double moves
-        mPossibleMoves = {
-            {1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1},{1,0},//all around
-            {2,2},{0,2},{-2,2},{-2,0},{-2,-2},{0,-2},{2,-2},{2,0}//double range
-        };
-
-        //attacks
-        const int m = color == WHITE ? 1 : -1;//direction multiplier
-        mPossibleAttacks = {{1,0},{-1,0},{0,m}};
 
     }
 
@@ -139,14 +220,36 @@ public:
         return new Infantery(mColor, mPosition);
     }
 
+    const std::vector<Coordinates> &possibleMoves() const
+    {
+        return mPossibleMoves;
+    }
+
+    const std::vector<Coordinates> &possibleAttacks() const override
+    {
+        return mColor == WHITE ? mPossibleWhiteAttacks : mPossibleBlackAttacks;
+    }
+
 
     QString strType() const override
     {
         return "L";
     }
 
+private:
+    static const std::vector<Coordinates> mPossibleMoves;
+
+    static const std::vector<Coordinates> mPossibleWhiteAttacks;
+
+    static const std::vector<Coordinates> mPossibleBlackAttacks;
 };
 
+/**
+ * @brief The Gunner class
+ * the gunner is as slow
+ * as the mobile tower
+ * but can shoot further in front of it
+ */
 class  Gunner : public Unit
 {
 public:
@@ -155,13 +258,6 @@ public:
     Gunner(COLOR color, const Coordinates &coordinates):
         Unit(color, coordinates)
     {
-        //standard moves
-        //attacks
-        const int m = color == WHITE ? 1 : -1;//direction multiplier
-        mPossibleAttacks = {
-            {1,0},{2,0},{-1,0},{-2,0},//side
-            {0,m},{0,m*2},{0,m*3}//front
-        };
     }
 
     Unit *clone()  const override
@@ -174,6 +270,15 @@ public:
         return "R";
     }
 
+    const std::vector<Coordinates> &possibleAttacks() const override
+    {
+        return mColor == WHITE ? mPossibleWhiteAttacks : mPossibleBlackAttacks;
+    }
+
+private:
+    static const std::vector<Coordinates> mPossibleWhiteAttacks;
+
+    static const std::vector<Coordinates> mPossibleBlackAttacks;
 };
 
 
