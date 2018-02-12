@@ -152,6 +152,8 @@ void MainWindow::play()
 
     std::size_t treeDepth = 2/log10(mBattleField.numberOfUnits());
 
+    treeDepth = std::min(treeDepth, (std::size_t)5);//max treedepth is five
+
     qDebug() << treeDepth;
 
     decisionTree.generate(treeDepth, mBattleField);

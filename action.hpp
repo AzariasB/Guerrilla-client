@@ -181,7 +181,7 @@ public:
      * @param firstAction the first and only action of this turn
      */
     Turn(const std::shared_ptr<Action> &firstAction):
-        mActions({firstAction})
+        mActions(firstAction, {})
     {
     }
 
@@ -191,7 +191,7 @@ public:
      * @param secondAction
      */
     Turn(const std::shared_ptr<Action> &firstAction,const std::shared_ptr<Action> &secondAction):
-        mActions({firstAction, secondAction})
+        mActions(firstAction, secondAction)
     {
     }
 
@@ -239,7 +239,7 @@ private:
     /**
      * @brief mActions a pionter to both of the actions
      */
-    std::array<std::shared_ptr<Action>, 2> mActions;
+    std::pair<std::shared_ptr<Action>, std::shared_ptr<Action>> mActions;
 };
 
 #endif // ACION_HPP

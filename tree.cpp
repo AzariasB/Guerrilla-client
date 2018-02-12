@@ -25,6 +25,7 @@ void Tree::genTreeNode(std::unique_ptr<Node> &parent, const BattleField &field, 
 
         std::unique_ptr<Node> nwNode = std::make_unique<Node>(turn);
         BattleField copy = field;//copy field to simulate turn
+        copy.setId(1-copy.getId());//switch field id
         turn.applyActions(copy);
 
         genTreeNode(nwNode, copy, depth-1, -coef);

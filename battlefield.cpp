@@ -108,16 +108,16 @@ float BattleField::actionWeight(const Action &action) const
     if(action.getType() == Action::ATTACK){
         //depending on the type of unit, different points
         auto &target = unitAt(action.getTo());
-        if(target->strType() == "S")return 200.f;
-        if(target->strType() == "R")return 10.f;
-        if(target->strType() == "L") return 50.f;
+        if(target->strType() == "S")return 200.f; // attacking mobile tower
+        if(target->strType() == "R")return 10.f; // attacking gunner
+        if(target->strType() == "L") return 50.f; // attacking infantery
     }else{
         //depending on the position on the board
+        return qrand()%50;
         auto &moving = unitAt(action.getFrom());
 
         if(moving->getColor() == Unit::WHITE)return action.getTo().y;
-        //return 25-action.getTo().y;
-        return qrand();
+        return 25-action.getTo().y;
     }
 }
 

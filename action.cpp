@@ -36,7 +36,6 @@ Action::Action():
     mFrom(),
     mTo()
 {
-
 }
 
 Action::Action(ACTION_TYPE type, Coordinates from, Coordinates to):
@@ -65,28 +64,28 @@ QJsonObject Action::toJson() const
 
 void Turn::applyActions(BattleField &field)
 {
-    if(mActions[0])field.applyAction(*mActions[0]);
-    if(mActions[1])field.applyAction(*mActions[1]);
+    if(mActions.first)field.applyAction(*mActions.first);
+    if(mActions.second)field.applyAction(*mActions.second);
 }
 
 void Turn::sendToSocket(QWebSocket &socket) const
 {
-    if(!mActions[0])return;
-    socket.sendTextMessage(mActions[0]->toString());
+    if(!mActions.first)return;
+    socket.sendTextMessage(mActions.first->toString());
 
-    if(!mActions[1])return;
-    socket.sendTextMessage(mActions[1]->toString());
+    if(!mActions.second)return;
+    socket.sendTextMessage(mActions.second->toString());
 
 }
 
 void Turn::addAction(const std::shared_ptr<Action> &nwAction)
 {
-    if(mActions[1])return;//already full
+    if(mActions.second)return;//already full
 
-    if(mActions[0]){
-        mActions[1] = nwAction;
+    if(mActions.first){
+        mActions.second = nwAction;
     }else{
-        mActions[0] = nwAction;
+        mActions.first = nwAction;
     }
 }
 
@@ -95,8 +94,8 @@ float Turn::getWeight() const
 {
     float tot = 0;
 
-    if(mActions[0]) tot += mActions[0]->getWeight();
-    if(mActions[1]) tot += mActions[1]->getWeight();
+    if(mActions.first) tot += mActions.first->getWeight();
+    if(mActions.second) tot += mActions.second->getWeight();
 
     return tot;
 }
@@ -105,12 +104,12 @@ const std::shared_ptr<Action> &Turn::getAction(quint8 index)
 {
     if(index > 2)throw std::out_of_range("Greater than 2");
 
-    return mActions[index];
+    return index == 0 ? mActions.first : mActions.second;
 }
 
 bool Turn::hasAttack() const
 {
-    return (mActions[0] && mActions[0]->getType() == Action::ATTACK) ||
-            (mActions[1] && mActions[1]->getType() == Action::ATTACK);
+    return (mActions.first && mActions.first->getType() == Action::ATTACK) ||
+            (mActions.second && mActions.second->getType() == Action::ATTACK);
 
 }
