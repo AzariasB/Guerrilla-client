@@ -1,0 +1,47 @@
+{
+   "tree_depth" : 4,
+   "type":"get_board",
+   "data":[
+      {
+         "coordinates":{
+            "x":14,
+            "y":5
+         },
+         "pawn":{
+            "color":0,
+            "type":1
+         }
+      },
+      {
+         "coordinates":{
+            "x":22,
+            "y":5
+         },
+         "pawn":{
+            "color":0,
+            "type":2
+         }
+      },
+      {
+         "coordinates":{
+            "x":2,
+            "y":19
+         },
+         "pawn":{
+            "color":1,
+            "type":2
+         }
+      },
+      {
+         "coordinates":{
+            "x":10,
+            "y":19
+         },
+         "pawn":{
+            "color":1,
+            "type":1
+         }
+      }
+   ],
+   "id":1
+}

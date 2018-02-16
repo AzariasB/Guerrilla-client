@@ -32,9 +32,9 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include "MainWindow.hpp"
-#include "ui_MainWindow.h"
 #include <QPushButton>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include "math.h"
 
 #include "tree.hpp"
@@ -49,11 +49,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setCentralWidget(center);
 
-
-
     connect(&mWebSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(error(QAbstractSocket::SocketError)));
     connect(&mWebSocket, &QWebSocket::connected, this, &MainWindow::connected);
 
+    // CHANGE THE URL HERE TO CONNECT TO ANOTHER SERVER
     mWebSocket.open(QUrl("ws://localhost:5000"));
 }
 
@@ -76,9 +75,6 @@ void MainWindow::connected()
 
 void MainWindow::messageReceived(QString msg)
 {
-   // qDebug() << msg;
-
-
     QJsonDocument doc = QJsonDocument::fromJson(msg.toUtf8());
     if(doc.isNull()){
         qDebug() << "Error while parsing json";
@@ -150,11 +146,9 @@ void MainWindow::play()
 {
     Tree decisionTree;
 
-    std::size_t treeDepth = 2/log10(mBattleField.numberOfUnits());
+    std::size_t treeDepth = 2/log10(mBattleField.numberOfUnits()); // depth depending on number of units
 
     treeDepth = std::min(treeDepth, (std::size_t)5);//max treedepth is five
-
-    qDebug() << treeDepth;
 
     decisionTree.generate(treeDepth, mBattleField);
 
@@ -176,7 +170,6 @@ void MainWindow::updateBoard(QJsonArray arr)
     mBattleField.fillField(arr);
 
     qDebug().noquote().nospace() << mBattleField;
-
 
     for(int y = 0; y < 25; ++y){
         for(int x = 0; x < 25; ++x){

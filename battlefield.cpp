@@ -112,10 +112,12 @@ float BattleField::actionWeight(const Action &action) const
         if(target->strType() == "R")return 10.f; // attacking gunner
         if(target->strType() == "L") return 50.f; // attacking infantery
     }else{
-        //depending on the position on the board
-        return qrand()%50;
-        auto &moving = unitAt(action.getFrom());
+        //random value for each move
+        return qrand()%25;
 
+        //depending on the position on the board
+        // other strategy : get closer to the end
+        auto &moving = unitAt(action.getFrom());
         if(moving->getColor() == Unit::WHITE)return action.getTo().y;
         return 25-action.getTo().y;
     }

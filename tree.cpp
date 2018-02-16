@@ -47,6 +47,7 @@ const Turn &Tree::getBestAction() const
             bestTurn = &node->action;
         }
     }
+
     return *bestTurn;
 }
 
